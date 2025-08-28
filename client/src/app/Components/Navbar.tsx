@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 export default function DarkNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navItems = ["Home", "Deals", "Events", "Trending", "About"];
+  const navItems = ["Home", "Developer Insights", "Following", "Projects", "Repositeries"];
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -24,13 +25,13 @@ export default function DarkNavbar() {
           <div className="hidden md:block">
             <ul className="flex space-x-8">
               {navItems.map((item) => (
-                <li
+                <li 
                   key={item}
                   className="relative group cursor-pointer text-white text-lg"
                 >
-                  <span className="transition-all duration-300 group-hover:text-cyan-400">
+                  <Link href={item==="Home"?"/":item.toLowerCase()} className="transition-all duration-300 group-hover:text-cyan-400">
                     {item}
-                  </span>
+                  </Link>
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full"></span>
                 </li>
               ))}
@@ -39,12 +40,12 @@ export default function DarkNavbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            <Link href="/login" className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Log In
-            </button>
-            <button className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            </Link>
+            <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Sign Up
-            </button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -79,9 +80,9 @@ export default function DarkNavbar() {
       >
         <div className="px-2 pt-2 pb-4 space-y-1 sm:px-3">
           {navItems.map((item, index) => (
-            <a
+            <Link
               key={item}
-              href="#"
+              href={item.toLowerCase()}
               className={`block px-3 py-2 text-base font-medium text-white hover:bg-gray-800 rounded-md transform transition-all duration-200 ${
                 isMenuOpen 
                   ? 'translate-x-0 opacity-100' 
@@ -93,11 +94,12 @@ export default function DarkNavbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               {item}
-            </a>
+            </Link>
           ))}
           <div className="pt-4 pb-3 border-t border-gray-700">
             <div className="flex flex-col space-y-3 px-2">
-              <button 
+              <Link 
+                href="/login"
                 className={`w-full px-4 py-2 border border-white rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${
                   isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
                 }`}
@@ -106,7 +108,7 @@ export default function DarkNavbar() {
                 }}
               >
                 Log In
-              </button>
+              </Link>
               <button 
                 className={`w-full px-4 py-2 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${
                   isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'

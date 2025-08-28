@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "./Components/Navbar";
+import Dashboard from "./Components/Dashboard";
 export default function Home() {
 
 
@@ -83,6 +84,7 @@ export default function Home() {
       <div>
         <Navbar />
       </div>
+      <Dashboard />
       {/* <div className="font-mono block">
         <h1>Home</h1>
         {accessToken && <p>Access Token: {accessToken}</p>}
