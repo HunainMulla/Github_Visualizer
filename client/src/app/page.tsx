@@ -83,11 +83,11 @@ export default function Home() {
       <div>
         <Navbar />
       </div>
-      <div className="font-mono block">
+      {/* <div className="font-mono block">
         <h1>Home</h1>
         {accessToken && <p>Access Token: {accessToken}</p>}
         {user && <p>User Data: {JSON.stringify(user)}</p>}
-      </div>
+      </div> */}
     </div>
   );
 }
