@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect,useState } from "react";
-
+import { useEffect, useState } from "react";
+import Navbar from "./Components/Navbar";
 export default function Home() {
 
 
-  const [accessToken,setAccessToken] = useState<string | null>(null)
-  const [user,setUser] = useState<any>(null)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
 
   const handleAccess = async (code: string | null) => {
     if (!code) {
@@ -30,6 +30,7 @@ export default function Home() {
       const data = await response.json();
       console.log("Access Token:", data.access_token);
       setAccessToken(data.access_token)
+      localStorage.setItem("access_token", data.access_token)
     } catch (error) {
       console.error("Authentication error:", error);
     }
@@ -38,6 +39,11 @@ export default function Home() {
 
   useEffect(() => {
 
+    const accessToken = localStorage.getItem("access_token")
+    if (accessToken) {
+      setAccessToken(accessToken)
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const code: string | null = params.get("code");
     if (!code) {
@@ -49,6 +55,7 @@ export default function Home() {
 
 
   useEffect(() => {
+    const accessToken = localStorage.getItem("access_token")
     if (!accessToken) return;
     const getUserData = async () => {
       try {
@@ -72,10 +79,15 @@ export default function Home() {
 
 
   return (
-    <>
-      <h1>Home</h1>
-      {accessToken && <p>Access Token: {accessToken}</p>}
-      {user && <p>User Data: {JSON.stringify(user)}</p>}
-    </>
+    <div>
+      <div>
+        <Navbar />
+      </div>
+      <div className="font-mono block">
+        <h1>Home</h1>
+        {accessToken && <p>Access Token: {accessToken}</p>}
+        {user && <p>User Data: {JSON.stringify(user)}</p>}
+      </div>
+    </div>
   );
 }

@@ -156,7 +156,7 @@ const LoginPage = () => {
     }, [])
 
     return (
-        <div>
+        <div className="font-mono">
             <h1>Login Page</h1>
             <button onClick={handleLogin}>Login</button>
         </div>
