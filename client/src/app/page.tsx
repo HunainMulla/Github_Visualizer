@@ -69,7 +69,7 @@ export default function Home() {
           throw new Error("Failed to fetch user data");
         }
         const data = await response.json();
-        console.log("User Data:", data);
+        console.log("User Data:", data.login);
         setUser(data);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -81,7 +81,7 @@ export default function Home() {
 
   return (
     <div>
-      <div>
+      <div className="font-mono py-7">
         <Navbar />
       </div>
       <Dashboard />

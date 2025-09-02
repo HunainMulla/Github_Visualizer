@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import { FiGithub, FiGitPullRequest, FiStar, FiEye, FiClock, FiCode } from 'react-icons/fi';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -12,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { useState,useEffect } from 'react';
 
 // Register ChartJS components
 ChartJS.register(
@@ -22,6 +22,10 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+
+
+
 
 // Dummy data
 const userData = {
@@ -56,6 +60,22 @@ const userData = {
     data: [12, 19, 8, 15, 22, 18, 25, 12, 19, 30, 25, 15],
   },
 };
+
+
+
+// const fetchData = async() =>{ 
+//   const response = await fetch("http://localhost:5000/auth", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({ code }),
+//   });
+// }
+
+
+
+
 
 const Dashboard = () => {
   const chartData = {
@@ -110,9 +130,9 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-300">Welcome back, {userData.name}!</p>
+      <div className="mb-8 flex flex-col justify-center items-center">
+        <h1 className="text-3xl font-semibold font-mono text-white">Dashboard</h1>
+        {/* <p className="text-gray-300 font-mono">Welcome back, {userData.name}!</p> */}
       </div>
 
       {/* Stats Grid */}
@@ -123,8 +143,8 @@ const Dashboard = () => {
               <FiGithub size={24} />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Public Repos</p>
-              <p className="text-2xl font-semibold text-white">{userData.stats.publicRepos}</p>
+              <p className="text-sm font-mono text-gray-400">Public Repos</p>
+              <p className="text-2xl font-mono text-white">{userData.stats.publicRepos}</p>
             </div>
           </div>
         </div>
@@ -135,8 +155,8 @@ const Dashboard = () => {
               <FiGitPullRequest size={24} />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Pull Requests</p>
-              <p className="text-2xl font-semibold text-white">{userData.stats.pullRequests}</p>
+              <p className="text-sm font-mono text-gray-400">Pull Requests</p>
+              <p className="text-2xl font-mono text-white">{userData.stats.pullRequests}</p>
             </div>
           </div>
         </div>
@@ -147,8 +167,8 @@ const Dashboard = () => {
               <FiStar size={24} />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Total Stars</p>
-              <p className="text-2xl font-semibold text-white">{userData.stats.stars}</p>
+              <p className="text-sm font-mono text-gray-400">Total Stars</p>
+              <p className="text-2xl font-mono text-white">{userData.stats.stars}</p>
             </div>
           </div>
         </div>
@@ -159,8 +179,8 @@ const Dashboard = () => {
               <FiEye size={24} />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-400">Private Repos</p>
-              <p className="text-2xl font-semibold text-white">{userData.stats.privateRepos}</p>
+              <p className="text-sm font-mono text-gray-400">Private Repos</p>
+              <p className="text-2xl font-mono text-white">{userData.stats.privateRepos}</p>
             </div>
           </div>
         </div>
@@ -169,7 +189,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Activity Feed */}
         <div className="lg:col-span-2 bg-[lab(9 -0.05 -2.33)] p-6 rounded-lg shadow-sm border border-gray-800">
-          <h2 className="text-lg font-semibold mb-4 text-white">Recent Activity</h2>
+          <h2 className="text-lg font-mono mb-4 text-white">Recent Activity</h2>
           <div className="space-y-4">
             {userData.recentActivity.map((activity) => (
               <div key={activity.id} className="flex items-start pb-4 border-b border-gray-800 last:border-0 last:pb-0">
@@ -179,18 +199,18 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-mono text-white">
                     {activity.type === 'push' && (
-                      <span>Pushed to <span className="font-semibold">{activity.repo}</span> on <span className="font-mono text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded">{activity.branch}</span></span>
+                      <span>Pushed to <span className="font-mono">{activity.repo}</span> on <span className="font-mono text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded">{activity.branch}</span></span>
                     )}
                     {activity.type === 'pull_request' && (
-                      <span>Opened a pull request in <span className="font-semibold">{activity.repo}</span></span>
+                      <span>Opened a pull request in <span className="font-mono">{activity.repo}</span></span>
                     )}
                     {activity.type === 'star' && (
-                      <span>Starred <span className="font-semibold">{activity.repo}</span></span>
+                      <span>Starred <span className="font-mono">{activity.repo}</span></span>
                     )}
                     {activity.type === 'issue' && (
-                      <span>Opened an issue in <span className="font-semibold">{activity.repo}</span></span>
+                      <span>Opened an issue in <span className="font-mono">{activity.repo}</span></span>
                     )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
@@ -208,7 +228,7 @@ const Dashboard = () => {
               alt={userData.name} 
               className="w-24 h-24 rounded-full border-4 border-indigo-900/50 mb-4"
             />
-            <h2 className="text-xl font-semibold text-white">{userData.name}</h2>
+            <h2 className="text-xl font-mono text-white">{userData.name}</h2>
             <p className="text-gray-400 mb-2">@{userData.username}</p>
             <p className="text-sm text-gray-400 text-center mb-4">{userData.bio}</p>
             
@@ -228,12 +248,12 @@ const Dashboard = () => {
 
       {/* Pinned Repositories */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-white">Pinned Repositories</h2>
+        <h2 className="text-lg font-mono mb-4 text-white">Pinned Repositories</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {userData.pinnedRepos.map((repo) => (
             <div key={repo.id} className="bg-[lab(9 -0.05 -2.33)] p-4 rounded-lg shadow-sm border border-gray-800 hover:border-indigo-500/50 transition-all">
               <div className="flex justify-between items-start">
-                <h3 className="font-semibold text-indigo-400">{repo.name}</h3>
+                <h3 className="font-mono text-indigo-400">{repo.name}</h3>
                 <span className="flex items-center text-sm text-gray-400">
                   <FiStar className="mr-1 text-yellow-400" /> {repo.stars}
                 </span>
@@ -250,7 +270,7 @@ const Dashboard = () => {
 
       {/* Contributions Graph */}
       <div className="bg-[lab(9 -0.05 -2.33)] p-6 rounded-lg shadow-sm border border-gray-800">
-        <h2 className="text-lg font-semibold mb-4 text-white">Contributions</h2>
+        <h2 className="text-lg font-mono mb-4 text-white">Contributions</h2>
         <div className="h-64">
           <Bar 
             data={chartData} 

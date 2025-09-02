@@ -136,31 +136,82 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FiGithub } from 'react-icons/fi';
+import Link from "next/link";
 
 const LoginPage = () => {
-
-    const CLIENT_ID = "Ov23liGJCPkj3Kr5zdGq"
-
+    const CLIENT_ID = "Ov23liGJCPkj3Kr5zdGq";
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = () => {
+        setIsLoading(true);
         window.location.assign("https://github.com/login/oauth/authorize?client_id=" + CLIENT_ID);
     }
 
     useEffect(() => {
-
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
-        console.log(code)
-
-    }, [])
+        
+        if (code) {
+            console.log("Authorization code received:", code);
+            // The main page will handle the token exchange
+            router.push(`/?code=${code}`);
+        }
+    }, [router])
 
     return (
-        <div className="font-mono">
-            <h1>Login Page</h1>
-            <button onClick={handleLogin}>Login</button>
+        <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4 sm:px-6 lg:px-8 font-mono">
+            <div className="max-w-md w-full space-y-8 bg-[#0a0a0a] border border-gray-800 p-8 rounded-xl shadow-lg">
+                <div className="text-center">
+                    <div className="flex-shrink-0 text-3xl font-bold uppercase tracking-widest text-white mb-6 flex justify-center">
+                        EX
+                    </div>
+                    <h2 className="text-2xl font-extrabold text-white">
+                        GitHub Authentication
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-300">
+                        Connect with your GitHub account to visualize your data
+                    </p>
+                </div>
+
+                <div className="mt-8 space-y-6">
+                    <div className="rounded-md shadow-sm">
+                        <button
+                            onClick={handleLogin}
+                            disabled={isLoading}
+                            className={`group relative w-full flex justify-center items-center py-3 px-4 border border-gray-700 rounded-md shadow-sm bg-[#0a0a0a] text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-colors duration-300 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            <FiGithub className="h-5 w-5 mr-2" />
+                            {isLoading ? 'Connecting...' : 'Sign in with GitHub'}
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-center">
+                        <div className="text-sm">
+                            <Link href="/" className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors duration-300">
+                                Return to Home
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-700"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-[#0a0a0a] text-gray-400">GitHub Visualization</span>
+                        </div>
+                    </div>
+                    <p className="mt-6 text-xs text-center text-gray-500">
+                        By signing in, you'll be able to visualize your GitHub repositories, contributions, and activity.
+                    </p>
+                </div>
+            </div>
         </div>
-    )
+    );
 }
 
-export default LoginPage
+export default LoginPage;

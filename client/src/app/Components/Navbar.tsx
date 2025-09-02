@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 export default function DarkNavbar() {
+  const accessToken = localStorage.getItem("access_token");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = ["Home", "Developer Insights", "Following", "Projects", "Repositeries"];
 
@@ -40,12 +41,15 @@ export default function DarkNavbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/login" className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+         {!accessToken &&   <Link href="/login" className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Log In
-            </Link>
-            <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            </Link>}
+         {!accessToken &&   <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Sign Up
-            </Link>
+            </Link>}
+         {accessToken &&   <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+              Logout
+            </Link>}
           </div>
 
           {/* Mobile menu button */}
