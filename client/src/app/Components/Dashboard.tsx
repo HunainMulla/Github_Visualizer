@@ -121,23 +121,46 @@
     }, [])
 
 
+    // const fetchRepos = async () => {
+    //     try {
+    //       const data = await fetch ("https://api.github.com/user/repos",{ 
+    //         headers: {
+    //           Authorization: `token ${accessToken}`,
+    //         },
+    //       }) 
+
+    //       const response = await data.json()
+    //       setRepos(response)
+
+    //     }
+    //     catch (error) {
+    //       console.error("Error fetching repos:", error);
+    //     }
+    // }
+
+
     const fetchRepos = async () => {
-        try {
-          const data = await fetch ("https://api.github.com/user/repos",{ 
-            headers: {
-              Authorization: `token ${accessToken}`,
-            },
-          }) 
-
-          const response = await data.json()
-          setRepos(response)
-
-        }
-        catch (error) {
-          console.error("Error fetching repos:", error);
-        }
-    }
-
+      if (!accessToken) return;
+    
+      try {
+        const res = await fetch("https://api.github.com/user/repos", {
+          headers: { Authorization: `token ${accessToken}` },
+        });
+        const data = await res.json();
+        setRepos(data);
+    
+        const publicRepos = data.filter((repo: any) => !repo.private);
+        const privateRepos = data.filter((repo: any) => repo.private);
+    
+        setPublicRepos(publicRepos);
+        setPrivateRepos(privateRepos);
+    
+        console.log("Public:", publicRepos.length, "Private:", privateRepos.length);
+      } catch (error) {
+        console.error("Error fetching repos:", error);
+      }
+    };
+    
 
 
     const getUserData = async () => {
@@ -171,15 +194,16 @@
       if (!fetchedUser) return;
       fetchRepos()
 
-      const publicRepos = repos.filter((repo:any) => !repo.private)
-      const privateRepos = repos.filter((repo:any) => repo.private)
-      setPublicRepos(publicRepos)
-      setPrivateRepos(privateRepos)
-      // setFollowers(fetchedUser.followers)
+      // const publicRepos = repos.filter((repo:any) => !repo.private)
+      // const privateRepos = repos.filter((repo:any) => repo.private)
+      // setPublicRepos(publicRepos)
+      // setPrivateRepos(privateRepos)
+      // // setFollowers(fetchedUser.followers)
     },[fetchedUser])
 
     useEffect(() => {
-      console.log(publicrepos)
+      console.log("Number of public repos ",publicrepos)
+      console.log("Number of private repos ",privateRepos)
     },[repos])
 
 
