@@ -148,7 +148,12 @@ const LoginPage = () => {
 
     const handleLogin = () => {
         setIsLoading(true);
-        window.location.assign("https://github.com/login/oauth/authorize?client_id=" + CLIENT_ID);
+        window.location.assign(
+            "https://github.com/login/oauth/authorize" +
+            "?client_id=" + CLIENT_ID +
+            "&redirect_uri=" +
+            "&scope=repo%20read:user%20user:email"
+          );
     }
 
     useEffect(() => {
