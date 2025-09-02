@@ -312,7 +312,7 @@
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Private Repos</p>
-                <p className="text-2xl font-mono text-white">{privateRepos.length}</p>
+                <p className="text-2xl font-mono text-white">{fetchedUser.total_private_repos}</p>
               </div>
             </div>
           </div>
@@ -362,7 +362,7 @@
               />
               <h2 className="text-xl font-mono text-white">{fetchedUser.login}</h2>
               <p className="text-gray-400 mb-2">@{userData.username}</p>
-              <p className="text-sm text-gray-400 text-center mb-4">{userData.bio}</p>
+              {fetchedUser.bio ?(<p className="text-sm text-gray-400 text-center mb-4">{fetchedUser.bio}</p>) : (<p className="text-sm text-gray-400 text-center mb-4">No Bio Found</p>)}
 
               <div className="w-full space-y-3 mt-4">
                 <div className="flex items-center text-sm">
