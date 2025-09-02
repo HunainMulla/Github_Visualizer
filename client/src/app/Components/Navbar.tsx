@@ -1,13 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
-export default function DarkNavbar() {
-  const accessToken = localStorage.getItem("access_token");
+export default function Navbar() {
+  // const accessToken = localStorage.getItem("access_token");
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+
+ 
+  useEffect(() => {
+    if(localStorage.getItem("access_token")){
+      setAccessToken(localStorage.getItem("access_token"))
+      return;
+    }
+    else{ 
+      console.log("No access token found");
+      return;
+    }
+  })
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navItems = ["Home", "Developer Insights", "Following", "Projects", "Repositeries"];
+
+
+  const handleLogout = () => {
+      localStorage.removeItem("access_token");
+      window.location.href = "/";
+  }
+
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -47,9 +69,9 @@ export default function DarkNavbar() {
          {!accessToken &&   <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Sign Up
             </Link>}
-         {accessToken &&   <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+         {accessToken &&   <button onClick={handleLogout} className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Logout
-            </Link>}
+            </button>}
           </div>
 
           {/* Mobile menu button */}
