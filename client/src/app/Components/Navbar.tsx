@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
 export default function Navbar() {
@@ -9,13 +9,13 @@ export default function Navbar() {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
 
- 
+
   useEffect(() => {
-    if(localStorage.getItem("access_token")){
+    if (localStorage.getItem("access_token")) {
       setAccessToken(localStorage.getItem("access_token"))
       return;
     }
-    else{ 
+    else {
       console.log("No access token found");
       return;
     }
@@ -26,8 +26,8 @@ export default function Navbar() {
 
 
   const handleLogout = () => {
-      localStorage.removeItem("access_token");
-      window.location.href = "/";
+    localStorage.removeItem("access_token");
+    window.location.href = "/";
   }
 
 
@@ -48,11 +48,11 @@ export default function Navbar() {
           <div className="hidden md:block">
             <ul className="flex space-x-8">
               {navItems.map((item) => (
-                <li 
+                <li
                   key={item}
                   className="relative group cursor-pointer text-white text-lg"
                 >
-                  <Link href={item==="Home"?"/":item.toLowerCase()} className="transition-all duration-300 group-hover:text-cyan-400">
+                  <Link href={item === "Home" ? "/" : item.toLowerCase()} className="transition-all duration-300 group-hover:text-cyan-400">
                     {item}
                   </Link>
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full"></span>
@@ -63,13 +63,17 @@ export default function Navbar() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-         {!accessToken &&   <Link href="/login" className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            {!accessToken && <button onClick={() => {
+              window.location.href = "/login"
+            }} className="px-4 py-1 border border-white rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Log In
-            </Link>}
-         {!accessToken &&   <Link href="/signup" className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            </button>}
+            {!accessToken && <button onClick={() => {
+              window.location.href = "/signup"
+            }} className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Sign Up
-            </Link>}
-         {accessToken &&   <button onClick={handleLogout} className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
+            </button>}
+            {accessToken && <button onClick={handleLogout} className="px-4 py-1 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-colors duration-300">
               Logout
             </button>}
           </div>
@@ -93,11 +97,10 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden fixed left-0 right-0 bg-gray-900 transition-all duration-300 ease-in-out ${
-          isMenuOpen 
-            ? 'top-16 opacity-100 visible' 
-            : '-top-full opacity-0 invisible'
-        }`}
+        className={`md:hidden fixed left-0 right-0 bg-gray-900 transition-all duration-300 ease-in-out ${isMenuOpen
+          ? 'top-16 opacity-100 visible'
+          : '-top-full opacity-0 invisible'
+          }`}
         style={{
           maxHeight: isMenuOpen ? 'calc(100vh - 4rem)' : '0',
           overflow: 'hidden',
@@ -109,11 +112,10 @@ export default function Navbar() {
             <Link
               key={item}
               href={item.toLowerCase()}
-              className={`block px-3 py-2 text-base font-medium text-white hover:bg-gray-800 rounded-md transform transition-all duration-200 ${
-                isMenuOpen 
-                  ? 'translate-x-0 opacity-100' 
-                  : '-translate-x-4 opacity-0'
-              }`}
+              className={`block px-3 py-2 text-base font-medium text-white hover:bg-gray-800 rounded-md transform transition-all duration-200 ${isMenuOpen
+                ? 'translate-x-0 opacity-100'
+                : '-translate-x-4 opacity-0'
+                }`}
               style={{
                 transitionDelay: isMenuOpen ? `${index * 75}ms` : '0ms'
               }}
@@ -124,21 +126,19 @@ export default function Navbar() {
           ))}
           <div className="pt-4 pb-3 border-t border-gray-700">
             <div className="flex flex-col space-y-3 px-2">
-              <Link 
+              <Link
                 href="/login"
-                className={`w-full px-4 py-2 border border-white rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${
-                  isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-                }`}
+                className={`w-full px-4 py-2 border border-white rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                  }`}
                 style={{
                   transitionDelay: isMenuOpen ? `${navItems.length * 75}ms` : '0ms'
                 }}
               >
                 Log In
               </Link>
-              <button 
-                className={`w-full px-4 py-2 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${
-                  isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-                }`}
+              <button
+                className={`w-full px-4 py-2 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                  }`}
                 style={{
                   transitionDelay: isMenuOpen ? `${(navItems.length + 1) * 75}ms` : '0ms'
                 }}

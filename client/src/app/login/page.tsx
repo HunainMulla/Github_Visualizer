@@ -1,3 +1,4 @@
+
 // 'use client';
 
 // import { useState } from 'react';
@@ -136,6 +137,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Navabar from "../Components/Navbar";
 import { FiGithub } from 'react-icons/fi';
 import Link from "next/link";
 
@@ -161,6 +163,10 @@ const LoginPage = () => {
     }, [router])
 
     return (
+        <div>
+            <div className="nav">
+                <Navabar />
+            </div>
         <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4 sm:px-6 lg:px-8 font-mono">
             <div className="max-w-md w-full space-y-8 bg-[#0a0a0a] border border-gray-800 p-8 rounded-xl shadow-lg">
                 <div className="text-center">
@@ -211,6 +217,7 @@ const LoginPage = () => {
                 </div>
             </div>
         </div>
+                            </div>
     );
 }
 
