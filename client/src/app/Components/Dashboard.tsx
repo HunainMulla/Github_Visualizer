@@ -257,7 +257,10 @@
     };
 
     return (
-      <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      <>
+      { loading?(<div className="min-h-screen flex justify-center items-center text-white">
+        Loading...
+      </div>): (<div className="min-h-screen bg-black text-white p-4 md:p-8">
         {/* Header */}
         <div className="mb-8 flex flex-col justify-center items-center">
           <h1 className="text-3xl font-semibold font-mono text-white">Dashboard</h1>
@@ -273,7 +276,7 @@
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Public Repos</p>
-                <p className="text-2xl font-mono text-white">{userData.stats.publicRepos}</p>
+                <p className="text-2xl font-mono text-white">{publicrepos.length}</p>
               </div>
             </div>
           </div>
@@ -309,7 +312,7 @@
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Private Repos</p>
-                <p className="text-2xl font-mono text-white">{userData.stats.privateRepos}</p>
+                <p className="text-2xl font-mono text-white">{privateRepos.length}</p>
               </div>
             </div>
           </div>
@@ -357,14 +360,14 @@
                 alt={userData.name}
                 className="w-24 h-24 rounded-full border-4 border-indigo-900/50 mb-4"
               />
-              <h2 className="text-xl font-mono text-white">{userData.name}</h2>
+              <h2 className="text-xl font-mono text-white">{fetchedUser.login}</h2>
               <p className="text-gray-400 mb-2">@{userData.username}</p>
               <p className="text-sm text-gray-400 text-center mb-4">{userData.bio}</p>
 
               <div className="w-full space-y-3 mt-4">
                 <div className="flex items-center text-sm">
                   <FiGithub className="mr-2 text-gray-400" />
-                  <span className="text-gray-300">{userData.email}</span>
+                  <span className="text-gray-300">{fetchedUser.email}</span>
                 </div>
                 <div className="flex items-center text-sm">
                   <FiClock className="mr-2 text-gray-400" />
@@ -430,7 +433,9 @@
             />
           </div>
         </div>
-      </div>
+      </div>)}
+   
+      </>
     );
   };
 
