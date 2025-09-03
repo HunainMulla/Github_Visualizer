@@ -182,10 +182,14 @@ const Dashboard = () => {
     else {
       console.log("Access token - ", accessToken)
       console.log("Fetching user events")
-      // fetchUserEvents()
     }
   }, [accessToken])
 
+
+  //test useEffect
+  useEffect(() => {
+    console.log("User pull requests - ", userPullRequest)
+  }, [userPullRequest])
 
 
   const chartData = {
@@ -269,7 +273,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Pull Requests</p>
-                <p className="text-2xl font-mono text-white">{userData.stats.pullRequests}</p>
+                <p className="text-2xl font-mono text-white">{userPullRequest.length}</p>
               </div>
             </div>
           </div>
