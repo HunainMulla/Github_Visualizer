@@ -12,6 +12,7 @@ import {
   Legend,
 } from 'chart.js';
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 // Register ChartJS components
 ChartJS.register(
@@ -65,6 +66,7 @@ const Dashboard = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [fetchedUser, setfetchedUser] = useState<any>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [userPullRequest, setUserPullRequest] = useState<any>(null)
 
   const handleAccess = async (code: string | null) => {
     if (!code) {
@@ -90,12 +92,34 @@ const Dashboard = () => {
         console.log("Access Token:", data.access_token);
         setAccessToken(data.access_token)
         localStorage.setItem("access_token", data.access_token)
+        localStorage.setItem("jwt_token", data.jwt_token)
       }
     } catch (error) {
       console.error("Authentication error:", error);
     }
   }
 
+
+  const fetchEvents = async () => {
+    if (!accessToken || !fetchedUser) {
+      console.error("Access token or fetched user is missing");
+      return;
+    };
+    try {
+      const response = await axios.get(`https://api.github.com/users/${fetchedUser.login}/events`, {
+        headers: {
+          Authorization: `token ${accessToken}`,
+        },
+      });
+      const data = response.data; // no await needed
+      console.log("Public events received on frontend:", data);
+      setUserPullRequest(data.filter((event: any) => event.type === "PullRequestEvent"))
+
+
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
 
   useEffect(() => {
 
@@ -135,6 +159,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token")
+    const jwtToken = localStorage.getItem("jwt_token")
     if (!accessToken) return;
     getUserData();
   }, [accessToken])
@@ -143,12 +168,24 @@ const Dashboard = () => {
   useEffect(() => {
     if (!fetchedUser) return;
     console.log("User data from api - ", fetchedUser)
+    fetchEvents();
+    if (userPullRequest) {
+      console.log("This are the number of pr's ", userPullRequest.length)
+    }
+
   }, [fetchedUser])
-  
-  
+
+
   //For debugging purpose 
   useEffect(() => {
-  }, [])
+    if (!accessToken) return;
+    else {
+      console.log("Access token - ", accessToken)
+      console.log("Fetching user events")
+      // fetchUserEvents()
+    }
+  }, [accessToken])
+
 
 
   const chartData = {
