@@ -1,266 +1,210 @@
-  "use client";
+"use client";
 
-  import { FiGithub, FiGitPullRequest, FiStar, FiEye, FiClock, FiCode } from 'react-icons/fi';
-  import { Bar } from 'react-chartjs-2';
-  import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-  } from 'chart.js';
-  import { useState, useEffect } from 'react';
+import { FiGithub, FiGitPullRequest, FiStar, FiEye, FiClock, FiCode } from 'react-icons/fi';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { useState, useEffect } from 'react';
 
-  // Register ChartJS components
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend
-  );
-
-
-
-
-
-  // Dummy data
-  const userData = {
-    name: 'John Doe',
-    username: 'johndoe',
-    email: 'john.doe@example.com',
-    avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
-    joinedDate: 'Jan 2020',
-    bio: 'Full-stack developer | Open source enthusiast | Building cool stuff',
-    stats: {
-      publicRepos: 24,
-      privateRepos: 8,
-      followers: 128,
-      following: 42,
-      pullRequests: 56,
-      stars: 312,
-    },
-    recentActivity: [
-      { id: 1, type: 'push', repo: 'web-project', time: '2 hours ago', branch: 'main' },
-      { id: 2, type: 'pull_request', repo: 'api-service', action: 'opened', time: '5 hours ago' },
-      { id: 3, type: 'star', repo: 'awesome-repo', action: 'starred', time: '1 day ago' },
-      { id: 4, type: 'commit', repo: 'mobile-app', message: 'Fix login flow', time: '1 day ago' },
-      { id: 5, type: 'issue', repo: 'docs', action: 'opened', time: '2 days ago' },
-    ],
-    pinnedRepos: [
-      { id: 1, name: 'web-project', description: 'Modern web application with React', stars: 45, language: 'TypeScript' },
-      { id: 2, name: 'api-service', description: 'REST API service for the application', stars: 23, language: 'Node.js' },
-      { id: 3, name: 'mobile-app', description: 'Cross-platform mobile application', stars: 67, language: 'React Native' },
-    ],
-    contributions: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      data: [12, 19, 8, 15, 22, 18, 25, 12, 19, 30, 25, 15],
-    },
-  };
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 
 
 
 
-  const Dashboard = () => {
-    const [accessToken, setAccessToken] = useState<string | null>(null)
-    const [fetchedUser, setfetchedUser] = useState<any>(null)
-    const [loading, setLoading] = useState<boolean>(true)
-    const [repos, setRepos] = useState<any>([])
-    const [publicrepos,setPublicRepos] = useState<any>([])
-    const [privateRepos,setPrivateRepos] = useState<any>([])
-    // const [followers,setFollowers] = useState<any>([])
-    // const [following,setFollowing] = useState<any>([])
+// Dummy data
+const userData = {
+  name: 'John Doe',
+  username: 'johndoe',
+  email: 'john.doe@example.com',
+  avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
+  joinedDate: 'Jan 2020',
+  bio: 'Full-stack developer | Open source enthusiast | Building cool stuff',
+  stats: {
+    publicRepos: 24,
+    privateRepos: 8,
+    followers: 128,
+    following: 42,
+    pullRequests: 56,
+    stars: 312,
+  },
+  recentActivity: [
+    { id: 1, type: 'push', repo: 'web-project', time: '2 hours ago', branch: 'main' },
+    { id: 2, type: 'pull_request', repo: 'api-service', action: 'opened', time: '5 hours ago' },
+    { id: 3, type: 'star', repo: 'awesome-repo', action: 'starred', time: '1 day ago' },
+    { id: 4, type: 'commit', repo: 'mobile-app', message: 'Fix login flow', time: '1 day ago' },
+    { id: 5, type: 'issue', repo: 'docs', action: 'opened', time: '2 days ago' },
+  ],
+  pinnedRepos: [
+    { id: 1, name: 'web-project', description: 'Modern web application with React', stars: 45, language: 'TypeScript' },
+    { id: 2, name: 'api-service', description: 'REST API service for the application', stars: 23, language: 'Node.js' },
+    { id: 3, name: 'mobile-app', description: 'Cross-platform mobile application', stars: 67, language: 'React Native' },
+  ],
+  contributions: {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    data: [12, 19, 8, 15, 22, 18, 25, 12, 19, 30, 25, 15],
+  },
+};
 
-    const handleAccess = async (code: string | null) => {
-      if (!code) {
-        console.error("No code provided");
-        return;
+const Dashboard = () => {
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [fetchedUser, setfetchedUser] = useState<any>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+
+  const handleAccess = async (code: string | null) => {
+    if (!code) {
+      console.error("No code provided");
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:5000/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to authenticate');
       }
-      try {
-        const response = await fetch("http://localhost:5000/auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ code }),
-        });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to authenticate');
-        }
-
-        const data = await response.json();
+      const data = await response.json();
+      if (data) {
         console.log("Access Token:", data.access_token);
         setAccessToken(data.access_token)
         localStorage.setItem("access_token", data.access_token)
-      } catch (error) {
-        console.error("Authentication error:", error);
       }
+    } catch (error) {
+      console.error("Authentication error:", error);
     }
+  }
 
 
-    useEffect(() => {
+  useEffect(() => {
 
-      const accessToken = localStorage.getItem("access_token")
-      if (accessToken) {
-        setAccessToken(accessToken)
-        return;
-      }
-      const params = new URLSearchParams(window.location.search);
-      const code: string | null = params.get("code");
-      if (!code) {
-        return;
-      }
-      handleAccess(code)
-
-    }, [])
-
-
-    // const fetchRepos = async () => {
-    //     try {
-    //       const data = await fetch ("https://api.github.com/user/repos",{ 
-    //         headers: {
-    //           Authorization: `token ${accessToken}`,
-    //         },
-    //       }) 
-
-    //       const response = await data.json()
-    //       setRepos(response)
-
-    //     }
-    //     catch (error) {
-    //       console.error("Error fetching repos:", error);
-    //     }
-    // }
-
-
-    const fetchRepos = async () => {
-      if (!accessToken) return;
-    
-      try {
-        const res = await fetch("https://api.github.com/user/repos", {
-          headers: { Authorization: `token ${accessToken}` },
-        });
-        const data = await res.json();
-        setRepos(data);
-    
-        const publicRepos = data.filter((repo: any) => !repo.private);
-        const privateRepos = data.filter((repo: any) => repo.private);
-    
-        setPublicRepos(publicRepos);
-        setPrivateRepos(privateRepos);
-    
-        console.log("Public:", publicRepos.length, "Private:", privateRepos.length);
-      } catch (error) {
-        console.error("Error fetching repos:", error);
-      }
-    };
-    
-
-
-    const getUserData = async () => {
-      if (!accessToken) return;
-
-      try {
-        const data = await fetch("https://api.github.com/user",{ 
-          headers: {
-            Authorization: `token ${accessToken}`,
-          },
-        })
-
-        const response = await data.json()
-        setfetchedUser(response)
-        setLoading(false)
-      }
-      catch (error) {
-        console.error("Error fetching user data:", error);
-      }
+    const accessToken = localStorage.getItem("access_token")
+    if (accessToken) {
+      setAccessToken(accessToken)
+      return;
     }
+    const params = new URLSearchParams(window.location.search);
+    const code: string | null = params.get("code");
+    if (!code) {
+      return;
+    }
+    handleAccess(code)
 
-    useEffect(() => {
-      const accessToken = localStorage.getItem("access_token")
-      if (!accessToken) return;
-      getUserData();
-    }, [accessToken])
-
-
-    useEffect(() => {
-      console.log(fetchedUser)
-      if (!fetchedUser) return;
-      fetchRepos()
-
-      // const publicRepos = repos.filter((repo:any) => !repo.private)
-      // const privateRepos = repos.filter((repo:any) => repo.private)
-      // setPublicRepos(publicRepos)
-      // setPrivateRepos(privateRepos)
-      // // setFollowers(fetchedUser.followers)
-    },[fetchedUser])
-
-    useEffect(() => {
-      console.log("Number of public repos ",publicrepos)
-      console.log("Number of private repos ",privateRepos)
-    },[repos])
+  }, [])
 
 
-    const chartData = {
-      labels: userData.contributions.labels,
-      datasets: [
-        {
-          label: 'Monthly Contributions',
-          data: userData.contributions.data,
-          backgroundColor: 'rgba(79, 70, 229, 0.8)',
-          borderRadius: 4,
+  const getUserData = async () => {
+    if (!accessToken) return;
+
+    try {
+      const data = await fetch("https://api.github.com/user", {
+        headers: {
+          Authorization: `token ${accessToken}`,
         },
-      ],
-    };
+      })
 
-    const chartOptions = {
-      responsive: true,
-      plugins: {
-        legend: {
+      const response = await data.json()
+      setfetchedUser(response)
+      setLoading(false)
+    }
+    catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access_token")
+    if (!accessToken) return;
+    getUserData();
+  }, [accessToken])
+
+
+  useEffect(() => {
+    if (!fetchedUser) return;
+    console.log("User data from api - ", fetchedUser)
+  }, [fetchedUser])
+  
+  
+  //For debugging purpose 
+  useEffect(() => {
+  }, [])
+
+
+  const chartData = {
+    labels: userData.contributions.labels,
+    datasets: [
+      {
+        label: 'Monthly Contributions',
+        data: userData.contributions.data,
+        backgroundColor: 'rgba(79, 70, 229, 0.8)',
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
           display: false,
         },
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            display: false,
-          },
-        },
-        x: {
-          grid: {
-            display: false,
-          },
+      x: {
+        grid: {
+          display: false,
         },
       },
-    };
+    },
+  };
 
-    const getActivityIcon = (type: string) => {
-      switch (type) {
-        case 'push':
-          return <FiCode className="text-green-500" />;
-        case 'pull_request':
-          return <FiGitPullRequest className="text-purple-500" />;
-        case 'star':
-          return <FiStar className="text-yellow-500" />;
-        case 'issue':
-          return <FiGithub className="text-red-500" />;
-        default:
-          return <FiClock className="text-gray-500" />;
-      }
-    };
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'push':
+        return <FiCode className="text-green-500" />;
+      case 'pull_request':
+        return <FiGitPullRequest className="text-purple-500" />;
+      case 'star':
+        return <FiStar className="text-yellow-500" />;
+      case 'issue':
+        return <FiGithub className="text-red-500" />;
+      default:
+        return <FiClock className="text-gray-500" />;
+    }
+  };
 
-    return (
-      <>
-      { loading?(<div className="min-h-screen flex justify-center items-center text-white">
+  return (
+    <>
+      {loading ? (<div className="min-h-screen flex justify-center items-center text-white">
         Loading...
-      </div>): (<div className="min-h-screen bg-black text-white p-4 md:p-8">
+      </div>) : (<div className="min-h-screen bg-black text-white p-4 md:p-8">
         {/* Header */}
         <div className="mb-8 flex flex-col justify-center items-center">
           <h1 className="text-3xl font-semibold font-mono text-white">Dashboard</h1>
@@ -276,7 +220,7 @@
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Public Repos</p>
-                <p className="text-2xl font-mono text-white">{publicrepos.length}</p>
+                <p className="text-2xl font-mono text-white">{fetchedUser.public_repos}</p>
               </div>
             </div>
           </div>
@@ -362,7 +306,7 @@
               />
               <h2 className="text-xl font-mono text-white">{fetchedUser.login}</h2>
               <p className="text-gray-400 mb-2">@{userData.username}</p>
-              {fetchedUser.bio ?(<p className="text-sm text-gray-400 text-center mb-4">{fetchedUser.bio}</p>) : (<p className="text-sm text-gray-400 text-center mb-4">No Bio Found</p>)}
+              {fetchedUser.bio ? (<p className="text-sm text-gray-400 text-center mb-4">{fetchedUser.bio}</p>) : (<p className="text-sm text-gray-400 text-center mb-4">No Bio Found</p>)}
 
               <div className="w-full space-y-3 mt-4">
                 <div className="flex items-center text-sm">
@@ -371,7 +315,11 @@
                 </div>
                 <div className="flex items-center text-sm">
                   <FiClock className="mr-2 text-gray-400" />
-                  <span className="text-gray-300">Joined {userData.joinedDate}</span>
+                  {/* <span className="text-gray-300">Joined {fetchedUser.created_at.toString().split(" ").slice(0,3)}</span> */}
+
+                  <span className="text-gray-300">
+                    Joined {new Date(fetchedUser.created_at).toDateString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -434,9 +382,9 @@
           </div>
         </div>
       </div>)}
-   
-      </>
-    );
-  };
 
-  export default Dashboard;
+    </>
+  );
+};
+
+export default Dashboard;
