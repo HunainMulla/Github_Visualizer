@@ -66,7 +66,8 @@ const Dashboard = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [fetchedUser, setfetchedUser] = useState<any>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const [userPullRequest, setUserPullRequest] = useState<any>(null)
+  const [userPullRequest, setUserPullRequest] = useState<any[]>([])
+  const [totalStars, setTotalStars] = useState<number>(0)
 
   const handleAccess = async (code: string | null) => {
     if (!code) {
@@ -89,7 +90,6 @@ const Dashboard = () => {
 
       const data = await response.json();
       if (data) {
-        console.log("Access Token:", data.access_token);
         setAccessToken(data.access_token)
         localStorage.setItem("access_token", data.access_token)
         localStorage.setItem("jwt_token", data.jwt_token)
@@ -106,16 +106,20 @@ const Dashboard = () => {
       return;
     };
     try {
-      const response = await axios.get(`https://api.github.com/users/${fetchedUser.login}/events`, {
+      const response = await axios.get(`https://api.github.com/users/${fetchedUser.login}/events?per_page=100`, {
         headers: {
           Authorization: `token ${accessToken}`,
         },
       });
-      const data = response.data; // no await needed
+      const data = await response.data; // no await needed
       console.log("Public events received on frontend:", data);
       setUserPullRequest(data.filter((event: any) => event.type === "PullRequestEvent"))
-
-
+      const totalStars: number = data.reduce(
+        (sum: number, repo: any) => sum + repo.stargazers_count,
+        0
+      );
+      console.log("Total stars:", totalStars);
+      setTotalStars(totalStars)
     } catch (error) {
       console.error("Error fetching events:", error);
     }
@@ -169,9 +173,6 @@ const Dashboard = () => {
     if (!fetchedUser) return;
     console.log("User data from api - ", fetchedUser)
     fetchEvents();
-    if (userPullRequest) {
-      console.log("This are the number of pr's ", userPullRequest.length)
-    }
 
   }, [fetchedUser])
 
@@ -249,7 +250,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-8 flex flex-col justify-center items-center">
           <h1 className="text-3xl font-semibold font-mono text-white">Dashboard</h1>
-          {/* <p className="text-gray-300 font-mono">Welcome back, {userData.name}!</p> */}
+          <p className="text-gray-300 font-mono">Welcome back, {fetchedUser.login}!</p>
         </div>
 
         {/* Stats Grid */}
@@ -285,7 +286,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-mono text-gray-400">Total Stars</p>
-                <p className="text-2xl font-mono text-white">{userData.stats.stars}</p>
+                <p className="text-2xl font-mono text-white">{totalStars || 0}</p>
               </div>
             </div>
           </div>
