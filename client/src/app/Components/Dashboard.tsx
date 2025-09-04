@@ -68,7 +68,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [userPullRequest, setUserPullRequest] = useState<any[]>([])
   const [totalStars, setTotalStars] = useState<number>(0)
-
+  const[userEvents, setUserEvents] = useState<any[]>([])
   const handleAccess = async (code: string | null) => {
     if (!code) {
       console.error("No code provided");
@@ -112,7 +112,7 @@ const Dashboard = () => {
         },
       });
       const data = await response.data; // no await needed
-      console.log("Public events received on frontend:", data);
+      setUserEvents(data)
       setUserPullRequest(data.filter((event: any) => event.type === "PullRequestEvent"))
       const totalStars: number = data.reduce(
         (sum: number, repo: any) => sum + repo.stargazers_count,
@@ -190,7 +190,13 @@ const Dashboard = () => {
   //test useEffect
   useEffect(() => {
     console.log("User pull requests - ", userPullRequest)
-  }, [userPullRequest])
+    console.log("User Events - ", userEvents)
+    userEvents.forEach((event: any) => {
+      console.log(event.type)
+    })
+
+
+  }, [userPullRequest,userEvents])
 
 
   const chartData = {
