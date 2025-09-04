@@ -64,39 +64,156 @@ const Dashboard = () => {
     }
   }
 
-  const fetchContributionData = async (username: string) => {
-    try {
-      const response = await axios.get(`https://api.github.com/users/${username}/events`);
-      const events = response.data;
+  interface ContributionData {
+    date: string;
+    type: 'pr' | 'commit' | 'issue' | 'review';
+    repo: string;
+  }
+
+  const fetchAllPages = async <T,>(
+    url: string,
+    accessToken: string,
+    maxPages = 10
+  ): Promise<T[]> => {
+    let allItems: T[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= maxPages) {
+      const response = await axios.get<T[]>(
+        `${url}${url.includes('?') ? '&' : '?'}per_page=100&page=${page}`,
+        { headers: { Authorization: `token ${accessToken}` } }
+      );
+
+      allItems = [...allItems, ...response.data];
       
-      // Process events to get contribution data
-      const contributions = events.reduce((acc: any, event: any) => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        acc[date] = (acc[date] || 0) + 1;
+      // Stop if we got fewer items than requested (reached the end)
+      if (response.data.length < 100) {
+        hasMore = false;
+      }
+      
+      page++;
+    }
+
+    return allItems;
+  };
+
+  const fetchUserData = async () => {
+    if (!accessToken || !fetchedUser) {
+      console.error("Access token or fetched user is missing");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const username = fetchedUser.login;
+      
+      // 1. Fetch all repositories
+      const repos = await fetchAllPages<{name: string; stargazers_count: number; full_name: string; private: boolean}>(
+        `https://api.github.com/user/repos`,
+        accessToken,
+        10 // Max 1000 repos (10 pages * 100 per page)
+      );
+
+      // 2. Calculate total stars
+      const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+      setTotalStars(totalStars);
+
+      // 3. Fetch PRs, commits, and issues for each repository
+      const contributions: ContributionData[] = [];
+      let pullRequests: any[] = [];
+
+      // Process repositories in parallel with concurrency limit
+      const processRepos = async (repoList: typeof repos) => {
+        const results = await Promise.all(
+          repoList.map(async (repo) => {
+            if (repo.private) return null; // Skip private repos for now
+
+            // Fetch PRs
+            const prs = await fetchAllPages<any>(
+              `https://api.github.com/repos/${repo.full_name}/pulls?state=all&author=${username}`,
+              accessToken,
+              2 // Max 200 PRs per repo
+            );
+
+            // Fetch commits (only for the last year to reduce load)
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            const commits = await fetchAllPages<any>(
+              `https://api.github.com/repos/${repo.full_name}/commits?author=${username}&since=${oneYearAgo.toISOString()}`,
+              accessToken,
+              2 // Max 200 commits per repo
+            );
+
+            // Process PRs
+            prs.forEach(pr => {
+              contributions.push({
+                date: pr.created_at,
+                type: 'pr',
+                repo: repo.full_name
+              });
+            });
+
+            // Process commits
+            commits.forEach(commit => {
+              if (commit.author && commit.author.login === username) {
+                contributions.push({
+                  date: commit.commit.author.date,
+                  type: 'commit',
+                  repo: repo.full_name
+                });
+              }
+            });
+
+            return prs;
+          })
+        );
+
+        return results.flat().filter(Boolean);
+      };
+
+      // Process repositories in chunks to avoid rate limiting
+      const chunkSize = 5;
+      for (let i = 0; i < repos.length; i += chunkSize) {
+        const chunk = repos.slice(i, i + chunkSize);
+        const chunkResults = await processRepos(chunk);
+        pullRequests = [...pullRequests, ...chunkResults];
+      }
+
+      // 4. Set pull requests
+      setUserPullRequest(pullRequests);
+
+      // 5. Process contributions for the chart
+      const contributionsByMonth = contributions.reduce((acc, contribution) => {
+        const date = new Date(contribution.date);
+        const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        acc[monthYear] = (acc[monthYear] || 0) + 1;
         return acc;
-      }, {});
+      }, {} as Record<string, number>);
 
-      // Get last 30 days of data
-      const last30Days = Array.from({ length: 30 }, (_, i) => {
+      // Generate labels for the last 12 months
+      const months = [];
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      
+      for (let i = 11; i >= 0; i--) {
         const d = new Date();
-        d.setDate(d.getDate() - (29 - i));
-        return d.toISOString().split('T')[0];
-      });
-
-      // Format data for chart
-      const labels = last30Days.map(date => {
-        const d = new Date(date);
-        return `${d.getDate()}/${d.getMonth() + 1}`;
-      });
-
-      const data = last30Days.map(date => contributions[date] || 0);
+        d.setMonth(d.getMonth() - i);
+        const month = d.getMonth();
+        const year = d.getFullYear();
+        const monthYear = `${year}-${String(month + 1).padStart(2, '0')}`;
+        months.push({
+          label: `${monthNames[month]} '${String(year).slice(2)}`,
+          value: contributionsByMonth[monthYear] || 0,
+          monthYear
+        });
+      }
 
       setChartData({
-        labels,
+        labels: months.map(m => m.label),
         datasets: [
           {
             label: 'Contributions',
-            data,
+            data: months.map(m => m.value),
             backgroundColor: 'rgba(99, 102, 241, 0.8)',
             borderColor: 'rgba(99, 102, 241, 1)',
             borderWidth: 1,
@@ -105,38 +222,15 @@ const Dashboard = () => {
           },
         ],
       });
-    } catch (error) {
-      console.error('Error fetching contribution data:', error);
-    }
-  };
 
-  const fetchEvents = async () => {
-    if (!accessToken || !fetchedUser) {
-      console.error("Access token or fetched user is missing");
-      return;
-    };
-    try {
-      const response = await axios.get(`https://api.github.com/users/${fetchedUser.login}/events?per_page=100`, {
-        headers: {
-          Authorization: `token ${accessToken}`,
-        },
-      });
-      const data = await response.data; // no await needed
-      setUserEvents(data)
-      setUserPullRequest(data.filter((event: any) => event.type === "PullRequestEvent"))
-      const totalStars: number = data.reduce(
-        (sum: number, repo: any) => sum + repo.stargazers_count,
-        0
-      );
-      console.log("Total stars:", totalStars);
-      setTotalStars(totalStars)
+      setLoading(false);
     } catch (error) {
-      console.error("Error fetching events:", error);
+      console.error("Error fetching user data:", error);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-
     const accessToken = localStorage.getItem("access_token")
     if (accessToken) {
       setAccessToken(accessToken)
@@ -164,7 +258,6 @@ const Dashboard = () => {
       const response = await data.json()
       setfetchedUser(response)
       setLoading(false)
-      await fetchContributionData(response.login);
     }
     catch (error) {
       console.error("Error fetching user data:", error);
@@ -181,8 +274,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!fetchedUser) return;
     console.log("User data from api - ", fetchedUser)
-    fetchEvents();
-
+    fetchUserData();
   }, [fetchedUser])
 
   useEffect(() => {
