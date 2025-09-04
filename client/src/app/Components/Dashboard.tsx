@@ -1,5 +1,4 @@
 "use client";
-
 import { FiGithub, FiGitPullRequest, FiStar, FiEye, FiClock, FiCode } from 'react-icons/fi';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -13,6 +12,7 @@ import {
 } from 'chart.js';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import React from 'react';
 
 // Register ChartJS components
 ChartJS.register(
@@ -24,40 +24,6 @@ ChartJS.register(
   Legend
 );
 
-// Dummy data
-const userData = {
-  name: 'John Doe',
-  username: 'johndoe',
-  email: 'john.doe@example.com',
-  avatar: 'https://avatars.githubusercontent.com/u/1?v=4',
-  joinedDate: 'Jan 2020',
-  bio: 'Full-stack developer | Open source enthusiast | Building cool stuff',
-  stats: {
-    publicRepos: 24,
-    privateRepos: 8,
-    followers: 128,
-    following: 42,
-    pullRequests: 56,
-    stars: 312,
-  },
-  recentActivity: [
-    { id: 1, type: 'push', repo: 'web-project', time: '2 hours ago', branch: 'main' },
-    { id: 2, type: 'pull_request', repo: 'api-service', action: 'opened', time: '5 hours ago' },
-    { id: 3, type: 'star', repo: 'awesome-repo', action: 'starred', time: '1 day ago' },
-    { id: 4, type: 'commit', repo: 'mobile-app', message: 'Fix login flow', time: '1 day ago' },
-    { id: 5, type: 'issue', repo: 'docs', action: 'opened', time: '2 days ago' },
-  ],
-  pinnedRepos: [
-    { id: 1, name: 'web-project', description: 'Modern web application with React', stars: 45, language: 'TypeScript' },
-    { id: 2, name: 'api-service', description: 'REST API service for the application', stars: 23, language: 'Node.js' },
-    { id: 3, name: 'mobile-app', description: 'Cross-platform mobile application', stars: 67, language: 'React Native' },
-  ],
-  contributions: {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    data: [12, 19, 8, 15, 22, 18, 25, 12, 19, 30, 25, 15],
-  },
-};
-
 const Dashboard = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [fetchedUser, setfetchedUser] = useState<any>(null)
@@ -65,6 +31,9 @@ const Dashboard = () => {
   const [userPullRequest, setUserPullRequest] = useState<any[]>([])
   const [totalStars, setTotalStars] = useState<number>(0)
   const[userEvents, setUserEvents] = useState<any[]>([])
+  const [contributionData, setContributionData] = useState<{weeks: Array<{w: number, a: number, d: number, c: number}>}>({ weeks: [] });
+  const [chartData, setChartData] = useState<any>(null);
+
   const handleAccess = async (code: string | null) => {
     if (!code) {
       console.error("No code provided");
@@ -95,6 +64,51 @@ const Dashboard = () => {
     }
   }
 
+  const fetchContributionData = async (username: string) => {
+    try {
+      const response = await axios.get(`https://api.github.com/users/${username}/events`);
+      const events = response.data;
+      
+      // Process events to get contribution data
+      const contributions = events.reduce((acc: any, event: any) => {
+        const date = new Date(event.created_at).toISOString().split('T')[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Get last 30 days of data
+      const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (29 - i));
+        return d.toISOString().split('T')[0];
+      });
+
+      // Format data for chart
+      const labels = last30Days.map(date => {
+        const d = new Date(date);
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      });
+
+      const data = last30Days.map(date => contributions[date] || 0);
+
+      setChartData({
+        labels,
+        datasets: [
+          {
+            label: 'Contributions',
+            data,
+            backgroundColor: 'rgba(99, 102, 241, 0.8)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+            barPercentage: 0.8,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error('Error fetching contribution data:', error);
+    }
+  };
 
   const fetchEvents = async () => {
     if (!accessToken || !fetchedUser) {
@@ -137,7 +151,6 @@ const Dashboard = () => {
 
   }, [])
 
-
   const getUserData = async () => {
     if (!accessToken) return;
 
@@ -151,6 +164,7 @@ const Dashboard = () => {
       const response = await data.json()
       setfetchedUser(response)
       setLoading(false)
+      await fetchContributionData(response.login);
     }
     catch (error) {
       console.error("Error fetching user data:", error);
@@ -164,7 +178,6 @@ const Dashboard = () => {
     getUserData();
   }, [accessToken])
 
-
   useEffect(() => {
     if (!fetchedUser) return;
     console.log("User data from api - ", fetchedUser)
@@ -172,8 +185,6 @@ const Dashboard = () => {
 
   }, [fetchedUser])
 
-
-  //For debugging purpose 
   useEffect(() => {
     if (!accessToken) return;
     else {
@@ -182,33 +193,17 @@ const Dashboard = () => {
     }
   }, [accessToken])
 
-
-  //test useEffect
   useEffect(() => {
     console.log("User pull requests - ", userPullRequest)
     console.log("User Events - ", userEvents)
     userEvents.forEach((event: any) => {
       console.log(event.type)
     })
-
-
   }, [userPullRequest,userEvents])
-
-
-  const chartData = {
-    labels: userData.contributions.labels,
-    datasets: [
-      {
-        label: 'Monthly Contributions',
-        data: userData.contributions.data,
-        backgroundColor: 'rgba(79, 70, 229, 0.8)',
-        borderRadius: 4,
-      },
-    ],
-  };
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: false,
@@ -218,12 +213,19 @@ const Dashboard = () => {
       y: {
         beginAtZero: true,
         grid: {
-          display: false,
+          display: true,
+          color: 'rgba(255, 255, 255, 0.05)',
+        },
+        ticks: {
+          color: '#9CA3AF',
         },
       },
       x: {
         grid: {
           display: false,
+        },
+        ticks: {
+          color: '#9CA3AF',
         },
       },
     },
@@ -365,12 +367,12 @@ const Dashboard = () => {
           <div className="bg-[lab(9 -0.05 -2.33)] p-6 rounded-lg shadow-sm border border-gray-800">
             <div className="flex flex-col items-center">
               <img
-                src={userData.avatar}
-                alt={userData.name}
+                src={fetchedUser.avatar_url}
+                alt={fetchedUser.name}
                 className="w-24 h-24 rounded-full border-4 border-indigo-900/50 mb-4"
               />
               <h2 className="text-xl font-mono text-white">{fetchedUser.login}</h2>
-              <p className="text-gray-400 mb-2">@{userData.username}</p>
+              <p className="text-gray-400 mb-2">@{fetchedUser.login}</p>
               {fetchedUser.bio ? (<p className="text-sm text-gray-400 text-center mb-4">{fetchedUser.bio}</p>) : (<p className="text-sm text-gray-400 text-center mb-4">No Bio Found</p>)}
 
               <div className="w-full space-y-3 mt-4">
@@ -380,8 +382,6 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center text-sm">
                   <FiClock className="mr-2 text-gray-400" />
-                  {/* <span className="text-gray-300">Joined {fetchedUser.created_at.toString().split(" ").slice(0,3)}</span> */}
-
                   <span className="text-gray-300">
                     Joined {new Date(fetchedUser.created_at).toDateString()}
                   </span>
@@ -391,59 +391,20 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Pinned Repositories */}
-        <div className="mb-8">
-          <h2 className="text-lg font-mono mb-4 text-white">Pinned Repositories</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userData.pinnedRepos.map((repo) => (
-              <div key={repo.id} className="bg-[lab(9 -0.05 -2.33)] p-4 rounded-lg shadow-sm border border-gray-800 hover:border-indigo-500/50 transition-all">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-mono text-indigo-400">{repo.name}</h3>
-                  <span className="flex items-center text-sm text-gray-400">
-                    <FiStar className="mr-1 text-yellow-400" /> {repo.stars}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-300 mt-1">{repo.description}</p>
-                <div className="mt-3 flex items-center">
-                  <span className="w-3 h-3 rounded-full bg-yellow-400 mr-1"></span>
-                  <span className="text-xs text-gray-400">{repo.language}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Contributions Graph */}
         <div className="bg-[lab(9 -0.05 -2.33)] p-6 rounded-lg shadow-sm border border-gray-800">
           <h2 className="text-lg font-mono mb-4 text-white">Contributions</h2>
           <div className="h-64">
-            <Bar
-              data={chartData}
-              options={{
-                ...chartOptions,
-                scales: {
-                  ...chartOptions.scales,
-                  y: {
-                    ...chartOptions.scales.y,
-                    ticks: {
-                      color: '#9CA3AF',
-                    },
-                    grid: {
-                      color: 'rgba(255, 255, 255, 0.05)',
-                    },
-                  },
-                  x: {
-                    ...chartOptions.scales.x,
-                    ticks: {
-                      color: '#9CA3AF',
-                    },
-                    grid: {
-                      color: 'rgba(255, 255, 255, 0.05)',
-                    },
-                  },
-                },
-              }}
-            />
+            {chartData ? (
+              <Bar
+                data={chartData}
+                options={chartOptions}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400">Loading contribution data...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>)}
@@ -452,4 +413,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard);
