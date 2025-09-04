@@ -51,38 +51,81 @@ export default function DeveloperInsights() {
   const [mostActiveDay, setMostActiveDay] = useState('');
   const [totalContributions, setTotalContributions] = useState(0);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('');
+
+  const fetchGitHubData = async (token: string) => {
+    try {
+      // First get the authenticated user's data
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      
+      if (!userResponse.ok) throw new Error('Failed to fetch user data');
+      
+      const userData = await userResponse.json();
+      setUsername(userData.login);
+
+      // Get user's events
+      const eventsResponse = await fetch(`https://api.github.com/users/${userData.login}/events?per_page=100`, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!eventsResponse.ok) throw new Error('Failed to fetch events');
+      
+      const events = await eventsResponse.json();
+      
+      // Process events into daily activity data
+      const last30Days = eachDayOfInterval({
+        start: subDays(new Date(), 29),
+        end: new Date()
+      });
+
+      const dailyActivity = last30Days.map(day => {
+        const dayStr = day.toISOString().split('T')[0];
+        const dayEvents = events.filter((event: any) => 
+          event.created_at.startsWith(dayStr)
+        );
+
+        return {
+          date: day.toISOString(),
+          commits: dayEvents.filter((e: any) => e.type === 'PushEvent')
+            .reduce((sum: number, e: any) => sum + (e.payload?.commits?.length || 0), 0),
+          pullRequests: dayEvents.filter((e: any) => 
+            e.type === 'PullRequestEvent' && e.payload.action === 'opened'
+          ).length,
+          issues: dayEvents.filter((e: any) => 
+            e.type === 'IssuesEvent' && e.payload.action === 'opened'
+          ).length,
+          codeReviews: dayEvents.filter((e: any) => 
+            e.type === 'PullRequestReviewEvent' || 
+            (e.type === 'PullRequestReviewCommentEvent')
+          ).length
+        };
+      });
+
+      setActivityData(dailyActivity);
+      calculateMetrics(dailyActivity);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching GitHub data:', error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     setAccessToken(token);
     
     if (token) {
-      // Simulate fetching data - replace with actual API calls
-      setTimeout(() => {
-        const mockData = generateMockData();
-        setActivityData(mockData);
-        calculateMetrics(mockData);
-        setLoading(false);
-      }, 1000);
+      fetchGitHubData(token);
     }
   }, []);
-
-  const generateMockData = (): ActivityData[] => {
-    const days = 30;
-    const today = new Date();
-    const dateArray = eachDayOfInterval({
-      start: subDays(today, days - 1),
-      end: today,
-    });
-
-    return dateArray.map((date, index) => ({
-      date: date.toISOString(),
-      commits: Math.floor(Math.random() * 15) * (Math.random() > 0.3 ? 1 : 0), // Some days with 0 commits
-      pullRequests: Math.floor(Math.random() * 5) * (Math.random() > 0.6 ? 1 : 0),
-      issues: Math.floor(Math.random() * 3) * (Math.random() > 0.7 ? 1 : 0),
-      codeReviews: Math.floor(Math.random() * 8) * (Math.random() > 0.5 ? 1 : 0),
-    }));
-  };
 
   const calculateMetrics = (data: ActivityData[]) => {
     // Calculate current streak
@@ -105,47 +148,41 @@ export default function DeveloperInsights() {
 
     // Calculate longest streak
     let maxStreak = 0;
-    let currentRun = 0;
+    let currentStreakCount = 0;
     
     data.forEach(day => {
       if (day.commits > 0 || day.pullRequests > 0) {
-        currentRun++;
-        maxStreak = Math.max(maxStreak, currentRun);
+        currentStreakCount++;
+        maxStreak = Math.max(maxStreak, currentStreakCount);
       } else {
-        currentRun = 0;
+        currentStreakCount = 0;
       }
     });
+    
     setLongestStreak(maxStreak);
 
     // Calculate daily average
     const totalDays = data.length;
-    const totalActivity = data.reduce((sum, day) => sum + day.commits + day.pullRequests, 0);
-    setDailyAverage(parseFloat((totalActivity / totalDays).toFixed(1)));
+    const activeDays = data.filter(day => day.commits > 0 || day.pullRequests > 0).length;
+    const totalActivities = data.reduce((sum, day) => 
+      sum + day.commits + day.pullRequests + day.issues + day.codeReviews, 0);
+    
+    setDailyAverage(activeDays > 0 ? Math.round((totalActivities / activeDays) * 10) / 10 : 0);
+    setTotalContributions(totalActivities);
 
-    // Most active hour (simplified for demo)
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const hourActivity = hours.map(hour => ({
-      hour,
-      count: Math.floor(Math.random() * 20) * (hour > 8 && hour < 20 ? 2 : 1)
-    }));
-    const mostActive = hourActivity.reduce((max, curr) => 
-      curr.count > max.count ? curr : max, { hour: 0, count: 0 });
+    // Calculate most active hour (simplified)
+    setMostActiveHour('14:00'); // This would require more detailed event data
     
-    setMostActiveHour(`${mostActive.hour}:00 - ${mostActive.hour + 1}:00`);
+    // Calculate most active day
+    const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sunday to Saturday
+    data.forEach(day => {
+      const dayOfWeek = new Date(day.date).getDay();
+      dayCounts[dayOfWeek] += day.commits + day.pullRequests;
+    });
     
-    // Most active day
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayActivity = days.map((day, index) => ({
-      day,
-      count: Math.floor(Math.random() * 15) * (index < 5 ? 2 : 1) // Weekdays more active
-    }));
-    const mostActiveDayData = dayActivity.reduce((max, curr) => 
-      curr.count > max.count ? curr : max, { day: '', count: 0 });
-    
-    setMostActiveDay(mostActiveDayData.day);
-    
-    // Total contributions
-    setTotalContributions(totalActivity);
+    const maxDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
+    setMostActiveDay(days[maxDayIndex]);
   };
 
   const chartData = {
