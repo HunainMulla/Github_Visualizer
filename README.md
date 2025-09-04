@@ -26,7 +26,7 @@ GitHub Visualizer lets you visualize your GitHub account in a cool and modern wa
 
 ## Tech Stack
 
-- **Frontend:** React, Next.js, Tailwind CSS  
+- **Frontend:** Typescript, Next.js, Tailwind CSS  
 - **Charts:** Chart.js  
 - **API Requests:** Axios  
 - **Authentication:** GitHub OAuth  
