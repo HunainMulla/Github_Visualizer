@@ -22,7 +22,7 @@ export default function Navbar() {
   })
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navItems = ["Home", "Developer Insights", "Following", "Projects", "Repositeries"];
+  const navItems = ["Home", "Developer Insights", "Following", "Repositeries"];
 
 
   const handleLogout = () => {
@@ -41,7 +41,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 text-2xl font-bold uppercase tracking-widest text-white hover:scale-110 transition-transform duration-300 cursor-pointer">
-            EX
+            GV
           </div>
 
           {/* Desktop Navigation */}
@@ -52,7 +52,7 @@ export default function Navbar() {
                   key={item}
                   className="relative group cursor-pointer text-white text-lg"
                 >
-                  <Link href={item === "Home" ? "/" : item.toLowerCase()} className="transition-all duration-300 group-hover:text-cyan-400">
+                  <Link href={item === "Home" ? "/" : item.toLowerCase().replace(" ", "")} className="transition-all duration-300 group-hover:text-cyan-400">
                     {item}
                   </Link>
                   <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full"></span>

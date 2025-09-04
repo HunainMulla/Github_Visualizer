@@ -1,6 +1,7 @@
 "use client";
 import { FiGithub, FiGitPullRequest, FiStar, FiEye, FiClock, FiCode } from 'react-icons/fi';
 import { Bar } from 'react-chartjs-2';
+import Loader from '../utils/Loader';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -230,6 +231,32 @@ const Dashboard = () => {
     }
   };
 
+
+  const fetchEvents = async () => {
+    if (!accessToken || !fetchedUser) {
+      console.error("Access token or fetched user is missing");
+      return;
+    };
+    try {
+      const response = await axios.get(`https://api.github.com/users/${fetchedUser.login}/events?per_page=100`, {
+        headers: {
+          Authorization: `token ${accessToken}`,
+        },
+      });
+      const data = await response.data; // no await needed
+      setUserEvents(data)
+      setUserPullRequest(data.filter((event: any) => event.type === "PullRequestEvent"))
+      const totalStars: number = data.reduce(
+        (sum: number, repo: any) => sum + repo.stargazers_count,
+        0
+      );
+      console.log("Total stars:", totalStars);
+      setTotalStars(totalStars)
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
+  
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token")
     if (accessToken) {
@@ -246,7 +273,7 @@ const Dashboard = () => {
   }, [])
 
   const getUserData = async () => {
-    if (!accessToken) return;
+    if (!accessToken ) return;
 
     try {
       const data = await fetch("https://api.github.com/user", {
@@ -278,19 +305,13 @@ const Dashboard = () => {
   }, [fetchedUser])
 
   useEffect(() => {
-    if (!accessToken) return;
-    else {
-      console.log("Access token - ", accessToken)
-      console.log("Fetching user events")
-    }
-  }, [accessToken])
+    if (!accessToken || !fetchedUser) return;
+    fetchEvents();
+  }, [fetchedUser])
 
   useEffect(() => {
     console.log("User pull requests - ", userPullRequest)
     console.log("User Events - ", userEvents)
-    userEvents.forEach((event: any) => {
-      console.log(event.type)
-    })
   }, [userPullRequest,userEvents])
 
   const chartOptions = {
@@ -340,9 +361,7 @@ const Dashboard = () => {
 
   return (
     <>
-      {loading ? (<div className="min-h-screen flex justify-center items-center text-white">
-        Loading...
-      </div>) : (<div className="min-h-screen bg-black text-white p-4 md:p-8">
+      {loading ? (<Loader />) : (<div className="min-h-screen bg-black text-white p-4 md:p-8">
         {/* Header */}
         <div className="mb-8 flex flex-col justify-center items-center">
           <h1 className="text-3xl font-semibold font-mono text-white">Dashboard</h1>
