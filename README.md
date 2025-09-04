@@ -1,6 +1,6 @@
 # GitHub Visualizer
 
-A modern, interactive dashboard to visualize GitHub user activity, contributions, and repositories. Built with **Next.js**, **React**, **Tailwind CSS**, and **Chart.js**, it provides a clear, beautiful overview of a user’s GitHub profile, including pull requests, stars, and contributions over time.
+GitHub Visualizer lets you visualize your GitHub account in a cool and modern way. Explore your profile, repositories, contributions, and activity with interactive charts and detailed stats. Built with Next.js, Typescript, Tailwind CSS, and Chart.js, it provides a sleek, intuitive interface to see your GitHub data at a glance.
 
 ---
 # User Interface
