@@ -24,10 +24,6 @@ ChartJS.register(
   Legend
 );
 
-
-
-
-
 // Dummy data
 const userData = {
   name: 'John Doe',
@@ -315,32 +311,53 @@ const Dashboard = () => {
           <div className="lg:col-span-2 bg-[lab(9 -0.05 -2.33)] p-6 rounded-lg shadow-sm border border-gray-800">
             <h2 className="text-lg font-mono mb-4 text-white">Recent Activity</h2>
             <div className="space-y-4">
-              {userData.recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start pb-4 border-b border-gray-800 last:border-0 last:pb-0">
-                  <div className="mt-1 mr-3">
-                    <div className="p-2 rounded-full bg-gray-800">
-                      {getActivityIcon(activity.type)}
+              {userEvents.slice(0, 5).map((event: any, index: number) => {
+                let activityType = '';
+                let displayText = '';
+                let repoName = event.repo?.name || '';
+
+                // Determine activity type and display text based on event type
+                switch(event.type) {
+                  case 'PushEvent':
+                    activityType = 'push';
+                    const branch = event.payload.ref ? event.payload.ref.split('/').pop() : 'main';
+                    displayText = `Pushed to ${repoName} on ${branch}`;
+                    break;
+                  case 'PullRequestEvent':
+                    activityType = 'pull_request';
+                    displayText = `Opened a pull request in ${repoName}`;
+                    break;
+                  case 'WatchEvent':
+                    activityType = 'star';
+                    displayText = `Starred ${repoName}`;
+                    break;
+                  case 'CreateEvent':
+                    activityType = 'commit';
+                    displayText = `Created ${event.payload.ref_type} in ${repoName}`;
+                    break;
+                  default:
+                    activityType = 'commit';
+                    displayText = `Performed ${event.type} in ${repoName}`;
+                }
+
+                return (
+                  <div key={`${event.id}-${index}`} className="flex items-start pb-4 border-b border-gray-800 last:border-0 last:pb-0">
+                    <div className="mt-1 mr-3">
+                      <div className="p-2 rounded-full bg-gray-800">
+                        {getActivityIcon(activityType)}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-mono text-white">
+                        {displayText}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(event.created_at).toLocaleString()}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-mono text-white">
-                      {activity.type === 'push' && (
-                        <span>Pushed to <span className="font-mono">{activity.repo}</span> on <span className="font-mono text-xs bg-gray-800 text-gray-300 px-2 py-0.5 rounded">{activity.branch}</span></span>
-                      )}
-                      {activity.type === 'pull_request' && (
-                        <span>Opened a pull request in <span className="font-mono">{activity.repo}</span></span>
-                      )}
-                      {activity.type === 'star' && (
-                        <span>Starred <span className="font-mono">{activity.repo}</span></span>
-                      )}
-                      {activity.type === 'issue' && (
-                        <span>Opened an issue in <span className="font-mono">{activity.repo}</span></span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
