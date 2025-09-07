@@ -126,7 +126,7 @@ export default function Navbar() {
           ))}
           <div className="pt-4 pb-3 border-t border-gray-700">
             <div className="flex flex-col space-y-3 px-2">
-              <Link
+             {!accessToken && <Link
                 href="/login"
                 className={`w-full px-4 py-2 border border-white rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
                   }`}
@@ -135,8 +135,8 @@ export default function Navbar() {
                 }}
               >
                 Log In
-              </Link>
-              <button
+              </Link> }
+              {!accessToken ? <button
                 className={`w-full px-4 py-2 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
                   }`}
                 style={{
@@ -144,7 +144,18 @@ export default function Navbar() {
                 }}
               >
                 Sign Up
-              </button>
+              </button> :<button onClick={()=>{ 
+                localStorage.removeItem("access_token");
+                localStorage.removeItem("jwt_token")
+              }}
+                className={`w-full px-4 py-2 bg-white text-black rounded hover:bg-cyan-400 hover:text-black transition-all duration-300 transform ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                  }`}
+                style={{
+                  transitionDelay: isMenuOpen ? `${(navItems.length + 1) * 75}ms` : '0ms'
+                }}
+              >
+                Logout
+              </button>  }
             </div>
           </div>
         </div>

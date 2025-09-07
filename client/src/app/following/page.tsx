@@ -169,7 +169,7 @@ export default function Following() {
                       </a>
                     </div>
                   </div>
-                  {activeTab === 'followers' ? (
+                  {/* {activeTab === 'followers' ? (
                     <button
                       onClick={() => handleFollow(user.login)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-800 text-indigo-200 hover:bg-indigo-700"
@@ -185,7 +185,7 @@ export default function Following() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="17" y1="14" x2="23" y2="14"></line></svg>
                       Unfollow
                     </button>
-                  )}
+                  )} */}
                 </div>
               ))
             )}
