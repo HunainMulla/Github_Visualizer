@@ -176,7 +176,7 @@ const LoginPage = () => {
             <div className="max-w-md w-full space-y-8 bg-[#0a0a0a] border border-gray-800 p-8 rounded-xl shadow-lg">
                 <div className="text-center">
                     <div className="flex-shrink-0 text-3xl font-bold uppercase tracking-widest text-white mb-6 flex justify-center">
-                        EX
+                        GV
                     </div>
                     <h2 className="text-2xl font-extrabold text-white">
                         GitHub Authentication
