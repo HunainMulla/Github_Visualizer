@@ -14,12 +14,18 @@ export default function Following() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
   useEffect(() => {
+
+    
+
     const fetchUsers = async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('access_token');
-        if (!token) throw new Error('No access token found');
+        if (!token) { 
+          window.location.href = '/login';
+        }
 
         const endpoint = activeTab === 'following' 
           ? 'https://api.github.com/user/following'
