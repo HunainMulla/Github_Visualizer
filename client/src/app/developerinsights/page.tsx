@@ -18,7 +18,7 @@ import {
   TimeScale,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { format, subDays, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 
 // Register ChartJS components
 ChartJS.register(
@@ -49,13 +49,57 @@ export default function DeveloperInsights() {
   const [dailyAverage, setDailyAverage] = useState(0);
   const [mostActiveHour, setMostActiveHour] = useState('');
   const [mostActiveDay, setMostActiveDay] = useState('');
-  const [totalContributions, setTotalContributions] = useState(0);
+  // State for total contributions, fetched from GraphQL
+  const [totalContributions, setTotalContributions] = useState(0); 
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
 
+  // --- NEW FUNCTION TO FETCH TOTAL CONTRIBUTIONS VIA GRAPHQL ---
+  const fetchTotalContributions = async (token: string, user: string) => {
+    const graphqlQuery = {
+      query: `
+        query($userName: String!) {
+          user(login: $userName) {
+            contributionsCollection {
+              contributionCalendar {
+                totalContributions
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        userName: user,
+      },
+    };
+
+    try {
+      const response = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Authorization': `bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(graphqlQuery),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch total contributions from GraphQL');
+        return 0;
+      }
+
+      const result = await response.json();
+      return result.data.user.contributionsCollection.contributionCalendar.totalContributions || 0;
+    } catch (error) {
+      console.error('Error fetching GraphQL data:', error);
+      return 0;
+    }
+  };
+  
+  // --- MODIFIED fetchGitHubData TO ALSO CALL GRAPHQL ---
   const fetchGitHubData = async (token: string) => {
     try {
-      // First get the authenticated user's data
+      // First, get the authenticated user's data
       const userResponse = await fetch('https://api.github.com/user', {
         headers: {
           'Authorization': `token ${token}`,
@@ -66,10 +110,15 @@ export default function DeveloperInsights() {
       if (!userResponse.ok) throw new Error('Failed to fetch user data');
       
       const userData = await userResponse.json();
-      setUsername(userData.login);
+      const login = userData.login;
+      setUsername(login);
 
-      // Get user's events
-      const eventsResponse = await fetch(`https://api.github.com/users/${userData.login}/events?per_page=100`, {
+      // Fetch the accurate, all-time total contributions using GraphQL
+      const totalCount = await fetchTotalContributions(token, login);
+      setTotalContributions(totalCount);
+
+      // Get user's recent events for chart and streak calculations
+      const eventsResponse = await fetch(`https://api.github.com/users/${login}/events?per_page=100`, {
         headers: {
           'Authorization': `token ${token}`,
           'Accept': 'application/vnd.github.v3+json'
@@ -80,7 +129,7 @@ export default function DeveloperInsights() {
       
       const events = await eventsResponse.json();
       
-      // Process events into daily activity data
+      // Process events into daily activity data for the last 30 days
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
         end: new Date()
@@ -128,61 +177,70 @@ export default function DeveloperInsights() {
   }, []);
 
   const calculateMetrics = (data: ActivityData[]) => {
+    // Sort data by date in ascending order
+    const sortedData = [...data].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     // Calculate current streak
-    let streak = 0;
-    const today = new Date();
-    let currentDate = new Date(today);
+    let currentStreakCount = 0;
+    let currentDate = new Date();
+    let foundBreak = false;
     
-    while (true) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      const dayData = data.find(d => d.date.startsWith(dateStr));
+    // Go backwards from today to find the current streak
+    while (!foundBreak && currentStreakCount < sortedData.length) {
+      const dayData = sortedData.find(d => new Date(d.date).setHours(0,0,0,0) === currentDate.setHours(0,0,0,0));
       
-      if (dayData && (dayData.commits > 0 || dayData.pullRequests > 0)) {
-        streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
+      if (dayData && (dayData.commits > 0 || dayData.pullRequests > 0 || dayData.issues > 0 || dayData.codeReviews > 0)) {
+        currentStreakCount++;
       } else {
-        break;
+        foundBreak = true;
       }
+      
+      // Move to previous day
+      currentDate.setDate(currentDate.getDate() - 1);
     }
-    setCurrentStreak(streak);
+    setCurrentStreak(currentStreakCount);
 
     // Calculate longest streak
     let maxStreak = 0;
-    let currentStreakCount = 0;
+    let currentRun = 0;
     
-    data.forEach(day => {
-      if (day.commits > 0 || day.pullRequests > 0) {
-        currentStreakCount++;
-        maxStreak = Math.max(maxStreak, currentStreakCount);
+    sortedData.forEach(day => {
+      const dayActivity = day.commits + day.pullRequests + day.issues + day.codeReviews;
+      
+      if (dayActivity > 0) {
+        currentRun++;
+        maxStreak = Math.max(maxStreak, currentRun);
       } else {
-        currentStreakCount = 0;
+        currentRun = 0;
       }
     });
     
     setLongestStreak(maxStreak);
 
-    // Calculate daily average
-    const totalDays = data.length;
-    const activeDays = data.filter(day => day.commits > 0 || day.pullRequests > 0).length;
-    const totalActivities = data.reduce((sum, day) => 
-      sum + day.commits + day.pullRequests + day.issues + day.codeReviews, 0);
-    
-    setDailyAverage(activeDays > 0 ? Math.round((totalActivities / activeDays) * 10) / 10 : 0);
-    setTotalContributions(totalActivities);
+    // Calculate daily average (only counting days with activity)
+    const activeDays = sortedData.filter(day => 
+      day.commits > 0 || day.pullRequests > 0 || day.issues > 0 || day.codeReviews > 0
+    ).length;
 
-    // Calculate most active hour (simplified)
-    setMostActiveHour('14:00'); // This would require more detailed event data
+    // Use total contributions from the limited 30-day window to calculate a meaningful average
+    const last30DayTotal = sortedData.reduce((sum, day) => sum + (day.commits + day.pullRequests + day.issues + day.codeReviews), 0);
     
-    // Calculate most active day
+    setDailyAverage(activeDays > 0 ? parseFloat((last30DayTotal / activeDays).toFixed(1)) : 0);
+
+    // Calculate most active day of week
     const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sunday to Saturday
-    data.forEach(day => {
+    sortedData.forEach(day => {
       const dayOfWeek = new Date(day.date).getDay();
-      dayCounts[dayOfWeek] += day.commits + day.pullRequests;
+      dayCounts[dayOfWeek] += day.commits + day.pullRequests + day.issues + day.codeReviews;
     });
     
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const maxDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
     setMostActiveDay(days[maxDayIndex]);
+
+    // Note: The GitHub Events API does not provide a single endpoint for hourly data, so `mostActiveHour` remains a placeholder.
   };
 
   const chartData = {
@@ -263,6 +321,13 @@ export default function DeveloperInsights() {
     );
   }
 
+  // Calculate percentages for activity distribution based on the 30-day activity data
+  const last30DayTotal = activityData.reduce((sum, day) => sum + (day.commits + day.pullRequests + day.issues + day.codeReviews), 0);
+  const commitsPercentage = last30DayTotal > 0 ? Math.round((activityData.reduce((sum, day) => sum + day.commits, 0) / last30DayTotal) * 100) : 0;
+  const prPercentage = last30DayTotal > 0 ? Math.round((activityData.reduce((sum, day) => sum + day.pullRequests, 0) / last30DayTotal) * 100) : 0;
+  const issuesPercentage = last30DayTotal > 0 ? Math.round((activityData.reduce((sum, day) => sum + day.issues, 0) / last30DayTotal) * 100) : 0;
+  const reviewsPercentage = last30DayTotal > 0 ? Math.round((activityData.reduce((sum, day) => sum + day.codeReviews, 0) / last30DayTotal) * 100) : 0;
+
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8">
         <div className="mb-16">
@@ -310,7 +375,7 @@ export default function DeveloperInsights() {
               <InsightItem 
                 icon={<FiClockIcon className="w-5 h-5 text-indigo-400" />}
                 title="Most Active Time"
-                value={mostActiveHour}
+                value="Data Not Available"
                 description="Your most productive hours"
               />
               <InsightItem 
@@ -365,25 +430,25 @@ export default function DeveloperInsights() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-indigo-400">
-                    {Math.round((activityData.reduce((sum, day) => sum + day.commits, 0) / totalContributions) * 100)}%
+                    {commitsPercentage}%
                   </div>
                   <div className="text-sm text-gray-400">Commits</div>
                 </div>
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-green-400">
-                    {Math.round((activityData.reduce((sum, day) => sum + day.pullRequests, 0) / totalContributions) * 100)}%
+                    {prPercentage}%
                   </div>
                   <div className="text-sm text-gray-400">Pull Requests</div>
                 </div>
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-yellow-400">
-                    {Math.round((activityData.reduce((sum, day) => sum + day.issues, 0) / totalContributions) * 100)}%
+                    {issuesPercentage}%
                   </div>
                   <div className="text-sm text-gray-400">Issues</div>
                 </div>
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-purple-400">
-                    {Math.round((activityData.reduce((sum, day) => sum + day.codeReviews, 0) / totalContributions) * 100)}%
+                    {reviewsPercentage}%
                   </div>
                   <div className="text-sm text-gray-400">Code Reviews</div>
                 </div>
