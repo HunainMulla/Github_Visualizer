@@ -23,7 +23,12 @@ export default function Repositories() {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'sources' | 'forks' | 'archived'>('all');
 
+  const accessToken = localStorage.getItem('access_token');
+
   useEffect(() => {
+    if(!accessToken) window.location.href = '/login';
+
+
     const fetchRepos = async () => {
       try {
         setLoading(true);
@@ -77,10 +82,10 @@ export default function Repositories() {
 
   return (
     <div className='flex flex-col'>
-      <div className='mt-5'>   
+      <div className=''>   
         <Navbar />
       </div>
-      <div className="min-h-screen bg-black text-white p-4 md:p-8">
+      <div className="min-h-screen bg-black text-white p-4 md:p-8 mt-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-8 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-indigo-400">
