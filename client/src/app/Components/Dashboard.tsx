@@ -182,8 +182,7 @@ const Dashboard = () => {
       }
 
       // 4. Set pull requests
-      setUserPullRequest(pullRequests);
-
+      
       // 5. Process contributions for the chart
       const contributionsByMonth = contributions.reduce((acc, contribution) => {
         const date = new Date(contribution.date);
@@ -313,6 +312,12 @@ const Dashboard = () => {
     console.log("User pull requests - ", userPullRequest)
     console.log("User Events - ", userEvents)
   }, [userPullRequest,userEvents])
+
+
+  // useEffect(() => {
+  //   console.log("New PUll ",userPullRequest)
+  // }, [userPullRequest])
+
 
   const chartOptions = {
     responsive: true,
@@ -524,4 +529,4 @@ const Dashboard = () => {
   );
 };
 
-export default React.memo(Dashboard);
+export default Dashboard;
