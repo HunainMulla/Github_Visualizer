@@ -14,6 +14,22 @@ GitHub Visualizer lets you visualize your GitHub account in a cool and modern wa
 <img width="1878" height="922" alt="image" src="https://github.com/user-attachments/assets/6a69af9f-3ea1-4d95-97b6-273445126d6a" />
 
 ---
+
+### Github Insights
+<img width="1900" height="917" alt="image" src="https://github.com/user-attachments/assets/9e0f77df-49c9-4e8e-84b5-8d9e87f6d929" />
+
+---
+
+<img width="1897" height="917" alt="image" src="https://github.com/user-attachments/assets/533052f8-4b9f-4e73-8c18-fa63380ea5ce" />
+
+---
+
+### Repositeries Page
+
+<img width="1885" height="915" alt="image" src="https://github.com/user-attachments/assets/800a3274-129d-4c5e-a8a2-6102fe66a0f1" />
+
+
+---
 ## Features
 
 - **User Dashboard**: Displays profile info, stats, and activity feed.
