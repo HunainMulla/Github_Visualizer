@@ -65,16 +65,20 @@ cd github-visualizer
 # 2. Install Node dependencies
 npm install
 
-# 3. Create environment variables file
-GITHUB_CLIENT_ID=your_client_id
-GITHUB_CLIENT_SECRET=your_client_secret
+# 3. Create environment variables file for frontend
+NEXT_PUBLIC_CLIENT_ID=your_client_id
 NEXT_PUBLIC_API_URL=http://localhost:5000
 
 
-# 4. Inform user
+# 4. Create environment variables file for backend
+JWT_SECRET=your_jwt_secret
+CLIENT_ID=your_client_id
+CLIENT_SECRET=your_client_secret
+
+# 5. Inform user
 ✅ Environment file created. Please replace 'your_client_id' and 'your_client_secret' with your GitHub OAuth credentials.
 
-# 5. Run the development server
+# 6. Run the development server
 Starting development server...
 npm run dev
 
